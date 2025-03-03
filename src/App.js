@@ -194,7 +194,7 @@ const GridContainer = styled.div`
   padding: 10px;
   border-radius: 8px;
   border: 1px solid ${props => (props.dark ? '#555' : '#ccc')};
-`;
+`;``
 
 const LifeWeeksDisplay = ({ dark }) => {
   const [birthday, setBirthday] = useState('');
