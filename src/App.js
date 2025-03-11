@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, differenceInWeeks, differenceInDays, addYears, isValid } from 'date-fns';
 import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaCalendarAlt, FaSun, FaMoon, FaLock, FaUnlock, FaCalendarWeek, FaRedo } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { FaCalendarAlt, FaSun, FaMoon, FaLock, FaUnlock, FaRedo } from 'react-icons/fa';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 // Date-fns setup
@@ -18,7 +19,9 @@ const localizer = dateFnsLocalizer({
 // Styled Components
 const AppContainer = styled(motion.div)`
   padding: 20px;
-  background: ${props => (props.dark ? '#2c3e50' : '#ecf0f1')};
+  background: ${props => props.dark
+    ? 'linear-gradient(to bottom, #151d25, #34495e)'
+    : 'linear-gradient(to bottom, #ecf0f1, #b5b5b5)'};
   color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
   min-height: 100vh;
   display: flex;
@@ -51,36 +54,43 @@ const Input = styled(motion.input)`
   padding: 10px 40px 10px 10px;
   border: 1px solid ${props => (props.dark ? '#95a5a6' : '#bdc3c7')};
   border-radius: 5px;
-  background: ${props => (props.dark ? '#34495e' : '#fff')};
+  background: ${props => props.dark
+    ? 'linear-gradient(to bottom, #34495e, #304254)'
+    : '#fff'};
   color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
 `;
 
-const CalendarWrapper = styled(motion.div)`
-  padding: 20px;
-  background: ${props => (props.dark ? '#34495e' : '#fff')};
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+const MainContent = styled.div`
+  display: flex;
   width: 100%;
   max-width: 1200px;
+  gap: 20px;
+`;
+
+const CalendarWrapper = styled(motion.div)`
+  flex: 1;
+  padding: 20px;
+  background: ${props => props.dark
+    ? 'linear-gradient(to bottom, #34495e, #385269)'
+    : 'linear-gradient(to bottom, #fff, #f9f9f9)'};
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+`;
+
+const RightSection = styled.div`
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 `;
 
 const LifeWeeksContainer = styled.div`
   padding: 20px;
-  background: ${props => (props.dark ? '#34495e' : '#fff')};
+  background: ${props => props.dark
+    ? 'linear-gradient(to bottom, #34495e, #385269)'
+    : 'linear-gradient(to bottom, #fff, #f9f9f9)'};
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 1200px;
-`;
-
-const LifeWeeksInput = styled.input`
-  padding: 8px;
-  margin: 10px 0;
-  border: 1px solid ${props => (props.dark ? '#95a5a6' : '#bdc3c7')};
-  border-radius: 5px;
-  background: ${props => (props.dark ? '#2c3e50' : '#fff')};
-  color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
 `;
 
 const IconButton = styled(motion.button)`
@@ -102,48 +112,85 @@ const TextButton = styled(motion.button)`
   cursor: pointer;
 `;
 
-const LandingContainer = styled(motion.div)`
-  text-align: center;
-  margin-top: 20%;
+const ModalOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
-// Landing Page Component
-const LandingPage = ({ onEnter }) => (
-  <LandingContainer
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-  >
-    <h1>Don't Die</h1>
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onEnter}
-      style={{
-        padding: '10px 20px',
-        fontSize: '1.2rem',
-        borderRadius: '5px',
-        border: 'none',
-        background: '#3498db',
-        color: '#fff',
-        cursor: 'pointer',
-      }}
-    >
-      Enter
-    </motion.button>
-  </LandingContainer>
-);
+const ModalContent = styled.div`
+  background-color: ${props => props.dark ? '#34495e' : 'white'};
+  padding: 20px;
+  border-radius: 10px;
+  color: ${props => props.dark ? '#ecf0f1' : '#2c3e50'};
+`;
 
-// Life Weeks Component
-const LifeWeeksDisplay = ({ dark }) => {
-  const [birthday, setBirthday] = useState('');
-  const [lifespanOption, setLifespanOption] = useState(null);
+// Components
+const Clock = ({ dark, birthday, lifespanOption }) => {
+  const [timePassedDisplay, setTimePassedDisplay] = useState('');
+
+  useEffect(() => {
+    if (!birthday || !lifespanOption) {
+      setTimePassedDisplay('Enter birthday and lifespan');
+      return;
+    }
+
+    const timer = setInterval(() => {
+      const birthdayDate = new Date(birthday);
+      const now = new Date();
+      const lifespanYearsOptions = { unhealthy: 65, healthy: 80, bryan: 130 };
+      const expectedLifespanYears = lifespanYearsOptions[lifespanOption];
+
+      if (!isValid(birthdayDate) || birthdayDate >= now || !expectedLifespanYears) {
+        setTimePassedDisplay('Invalid date or option');
+        return;
+      }
+
+      const expectedDeath = addYears(birthdayDate, expectedLifespanYears);
+
+      if (now > expectedDeath) {
+        setTimePassedDisplay('Lifespan exceeded');
+        clearInterval(timer);
+        return;
+      }
+
+      const yearsPassed = differenceInWeeks(now, birthdayDate) / 52;
+      const expectedYears = expectedLifespanYears;
+
+      setTimePassedDisplay(`Years Passed: ${yearsPassed.toFixed(2)} / Expected: ${expectedYears}`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [birthday, lifespanOption]);
+
+  return (
+    <div style={{ textAlign: 'center', fontSize: '1.2rem', color: dark ? '#ecf0f1' : '#2c3e50' }}>
+      Lifespan Clock: {timePassedDisplay}
+    </div>
+  );
+};
+
+const LifeWeeksDisplay = ({ dark, birthday, setBirthday, lifespanOption, setLifespanOption }) => {
   const [unit, setUnit] = useState('weeks');
 
   const lifespanYears = { unhealthy: 65, healthy: 80, bryan: 130 };
   const birthdayDate = new Date(birthday);
   const now = new Date();
   const isValidDate = isValid(birthdayDate) && birthdayDate < now;
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Text copied to clipboard');
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+  };
 
   let content;
   if (!birthday || !lifespanOption || !isValidDate) {
@@ -169,18 +216,23 @@ const LifeWeeksDisplay = ({ dark }) => {
   return (
     <LifeWeeksContainer dark={dark}>
       <h2>Life Weeks</h2>
-      <LifeWeeksInput
+      <input
         type="date"
         value={birthday}
         onChange={e => setBirthday(e.target.value)}
-        dark={dark}
+        style={{ padding: '8px', margin: '10px 0', border: '1px solid #bdc3c7', borderRadius: '5px', background: dark ? '#2c3e50' : '#fff', color: dark ? '#ecf0f1' : '#2c3e50' }}
       />
       <div>
         {['unhealthy', 'healthy', 'bryan'].map(opt => (
           <TextButton
             key={opt}
             dark={dark}
-            onClick={() => setLifespanOption(opt)}
+            onClick={() => {
+              setLifespanOption(opt);
+              if (opt === 'bryan') {
+                copyToClipboard(`PLACEHOLDER`);
+              }
+            }}
             active={lifespanOption === opt}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -209,14 +261,18 @@ const LifeWeeksDisplay = ({ dark }) => {
 };
 
 // Main App Component
-const App = () => {
+const MainApp = () => {
+  const [calendarView, setCalendarView] = useState('day');
+  const [calendarDate, setCalendarDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const [lockedIn, setLockedIn] = useState(false);
-  const [showLifeWeeks, setShowLifeWeeks] = useState(false);
   const [parseErrors, setParseErrors] = useState([]);
-  const [showLanding, setShowLanding] = useState(true);
   const [lastInput, setLastInput] = useState('');
+  const [calendarHeight, setCalendarHeight] = useState(800);
+  const [birthday, setBirthday] = useState('');
+  const [lifespanOption, setLifespanOption] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null); // New state for selected event
   const calendarWrapperRef = useRef(null);
 
   const parseEvents = (input, referenceDate) => {
@@ -231,7 +287,7 @@ const App = () => {
         const start = parse(`${startTime} ${period}`, 'h:mm a', referenceDate);
         const end = parse(`${endTime} ${period}`, 'h:mm a', referenceDate);
         if (end < start) end.setDate(end.getDate() + 1);
-        newEvents.push({ title: title.trim(), start, end });
+        newEvents.push({ title: title.trim(), start, end, color: '#3788d8' }); // Added color property
       } else {
         errors.push(`Invalid event: ${str}`);
       }
@@ -255,72 +311,125 @@ const App = () => {
         const now = new Date();
         const startOfDay = new Date(now.setHours(0, 0, 0, 0));
         const fraction = (now - startOfDay) / (24 * 60 * 60 * 1000);
-        const scrollPosition = fraction * 800 - scrollContainer.clientHeight / 2;
+        const scrollPosition = fraction * calendarHeight - scrollContainer.clientHeight / 2;
         scrollContainer.scrollTop = scrollPosition;
       }
     }
-  }, [lockedIn]);
+  }, [lockedIn, calendarHeight]);
+
+  // Custom event component for colored events
+  const CustomEvent = ({ event }) => (
+    <div style={{ backgroundColor: event.color, color: 'white', padding: '5px', borderRadius: '5px' }}>
+      {event.title}
+    </div>
+  );
 
   return (
     <AppContainer dark={darkMode}>
-      <AnimatePresence>
-        {showLanding ? (
-          <LandingPage key="landing" onEnter={() => setShowLanding(false)} />
-        ) : (
-          <motion.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Header dark={darkMode} initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }}>
-              <FaCalendarAlt /> Fast Calendar
-              <IconButton dark={darkMode} onClick={() => setDarkMode(!darkMode)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                {darkMode ? <FaSun /> : <FaMoon />}
-              </IconButton>
-              <IconButton dark={darkMode} onClick={() => setLockedIn(!lockedIn)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                {lockedIn ? <FaUnlock /> : <FaLock />}
-              </IconButton>
-              <IconButton dark={darkMode} onClick={() => setShowLifeWeeks(!showLifeWeeks)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <FaCalendarWeek />
-              </IconButton>
-            </Header>
-            <InputWrapper>
-              <Input
-                dark={darkMode}
-                placeholder="e.g., Meeting 9:00-10:00 am; Lunch 12:00-1:00 pm"
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    const inputValue = e.target.value;
-                    parseEvents(inputValue, new Date());
-                    setLastInput(inputValue);
-                    e.target.value = '';
-                  }
-                }}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-              />
-              <IconButton dark={darkMode} onClick={repeatEvents} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <FaRedo />
-              </IconButton>
-              {parseErrors.length > 0 && (
-                <div style={{ color: 'red', marginTop: '10px' }}>
-                  {parseErrors.map((err, i) => <p key={i}>{err}</p>)}
-                </div>
-              )}
-            </InputWrapper>
-            <CalendarWrapper ref={calendarWrapperRef} dark={darkMode} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
-              <Calendar
-                localizer={localizer}
-                events={events}
-                defaultView="day"
-                views={['day', 'week', 'month']}
-                step={5}
-                timeslots={12}
-                defaultDate={new Date()}
-                style={{ height: '800px' }}
-              />
-            </CalendarWrapper>
-            {showLifeWeeks && <LifeWeeksDisplay dark={darkMode} />}
-          </motion.div>
+      <Header dark={darkMode} initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }}>
+        <FaCalendarAlt /> Fast Calendar
+        <IconButton dark={darkMode} onClick={() => setDarkMode(!darkMode)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+          {darkMode ? <FaSun /> : <FaMoon />}
+        </IconButton>
+        <IconButton dark={darkMode} onClick={() => setLockedIn(!lockedIn)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+          {lockedIn ? <FaUnlock /> : <FaLock />}
+        </IconButton>
+      </Header>
+      <InputWrapper>
+        <Input
+          dark={darkMode}
+          placeholder="e.g., Meeting 9:00-10:00 am; Lunch 12:00-1:00 pm"
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              const inputValue = e.target.value;
+              parseEvents(inputValue, new Date());
+              setLastInput(inputValue);
+              e.target.value = '';
+            }
+          }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+        />
+        <IconButton dark={darkMode} onClick={repeatEvents} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+          <FaRedo />
+        </IconButton>
+        {parseErrors.length > 0 && (
+          <div style={{ color: 'red', marginTop: '10px' }}>
+            {parseErrors.map((err, i) => <p key={i}>{err}</p>)}
+          </div>
         )}
-      </AnimatePresence>
+      </InputWrapper>
+      <MainContent>
+        <CalendarWrapper ref={calendarWrapperRef} dark={darkMode} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+            <div>
+              <TextButton dark={darkMode} onClick={() => setCalendarHeight(prev => prev + 100)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                Increase Size
+              </TextButton>
+              <TextButton dark={darkMode} onClick={() => setCalendarHeight(prev => Math.max(prev - 100, 300))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                Decrease Size
+              </TextButton>
+            </div>
+          </div>
+          <Calendar
+            localizer={localizer}
+            events={events}
+            view={calendarView}
+            onView={(newView) => setCalendarView(newView)}
+            date={calendarDate}
+            onNavigate={(newDate) => setCalendarDate(newDate)}
+            step={15} // Fixed value, density removed
+            timeslots={4} // Fixed value, density removed
+            views={['day', 'week', 'month']}
+            style={{ height: `${calendarHeight}px` }}
+            onSelectEvent={(event) => setSelectedEvent(event)} // Added event selection
+            components={{ event: CustomEvent }} // Custom event rendering
+          />
+          {selectedEvent && (
+            <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <ModalContent dark={darkMode}>
+                <h2>{selectedEvent.title}</h2>
+                <p>Start: {format(selectedEvent.start, 'PPpp')}</p>
+                <p>End: {format(selectedEvent.end, 'PPpp')}</p>
+                <button
+                  onClick={() => {
+                    const text = `Title: ${selectedEvent.title}\nStart: ${format(selectedEvent.start, 'PPpp')}\nEnd: ${format(selectedEvent.end, 'PPpp')}`;
+                    navigator.clipboard.writeText(text).then(() => alert('Event details copied to clipboard'));
+                  }}
+                >
+                  Share
+                </button>
+                <input
+                  type="color"
+                  value={selectedEvent.color}
+                  onChange={(e) => {
+                    const newColor = e.target.value;
+                    setEvents(prevEvents => prevEvents.map(ev => ev === selectedEvent ? { ...ev, color: newColor } : ev));
+                  }}
+                  style={{ marginLeft: '10px' }}
+                />
+                <button onClick={() => setSelectedEvent(null)} style={{ marginLeft: '10px' }}>Close</button>
+              </ModalContent>
+            </ModalOverlay>
+          )}
+        </CalendarWrapper>
+        <RightSection>
+          <Clock dark={darkMode} birthday={birthday} lifespanOption={lifespanOption} />
+          <LifeWeeksDisplay dark={darkMode} birthday={birthday} setBirthday={setBirthday} lifespanOption={lifespanOption} setLifespanOption={setLifespanOption} />
+        </RightSection>
+      </MainContent>
     </AppContainer>
+  );
+};
+
+// App Component with Routing
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/main" element={<MainApp />} />
+      </Routes>
+    </Router>
   );
 };
 
