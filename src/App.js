@@ -1,13 +1,19 @@
+// UwU Hi this is my codeee <3
+
+// It is a smart calendar that enables instant deployment of events with a AI and Programatic approach.
+// It is super fast, but it needs lots of work. this is just a start.
+// 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, differenceInWeeks, differenceInDays, addYears, isValid } from 'date-fns';
+import { format, parse, startOfWeek, getDay, differenceInWeeks, differenceInDays, addYears, isValid, addDays } from 'date-fns';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { FaCalendarAlt, FaSun, FaMoon, FaLock, FaUnlock, FaRedo } from 'react-icons/fa';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-// Date-fns setup
+// Date-fns localizer setup
 const localizer = dateFnsLocalizer({
   format,
   parse,
@@ -38,6 +44,9 @@ const Header = styled(motion.header)`
   font-weight: bold;
   width: 100%;
   max-width: 1200px;
+  @media (max-width: 768px) {
+    font-size: 1.2rem;
+  }
 `;
 
 const InputWrapper = styled.div`
@@ -54,10 +63,13 @@ const Input = styled(motion.input)`
   padding: 10px 40px 10px 10px;
   border: 1px solid ${props => (props.dark ? '#95a5a6' : '#bdc3c7')};
   border-radius: 5px;
-  background: ${props => props.dark
-    ? 'linear-gradient(to bottom, #34495e, #304254)'
-    : '#fff'};
+  background: ${props => props.dark ? '#304254' : '#fff'};
   color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
+  transition: border-color 0.3s;
+  &:focus {
+    border-color: ${props => (props.dark ? '#3498db' : '#2980b9')};
+    outline: none;
+  }
 `;
 
 const MainContent = styled.div`
@@ -65,6 +77,9 @@ const MainContent = styled.div`
   width: 100%;
   max-width: 1200px;
   gap: 20px;
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
 const CalendarWrapper = styled(motion.div)`
@@ -74,7 +89,7 @@ const CalendarWrapper = styled(motion.div)`
     ? 'linear-gradient(to bottom, #34495e, #385269)'
     : 'linear-gradient(to bottom, #fff, #f9f9f9)'};
   border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 `;
 
 const RightSection = styled.div`
@@ -82,6 +97,9 @@ const RightSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const LifeWeeksContainer = styled.div`
@@ -90,7 +108,7 @@ const LifeWeeksContainer = styled.div`
     ? 'linear-gradient(to bottom, #34495e, #385269)'
     : 'linear-gradient(to bottom, #fff, #f9f9f9)'};
   border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 `;
 
 const IconButton = styled(motion.button)`
@@ -100,16 +118,23 @@ const IconButton = styled(motion.button)`
   cursor: pointer;
   font-size: 1.2rem;
   margin-left: 10px;
+  transition: color 0.3s;
+  padding: 10px;
+  &:hover {
+    color: ${props => (props.dark ? '#3498db' : '#2980b9')};
+  }
 `;
 
 const TextButton = styled(motion.button)`
-  background: ${props => (props.active ? (props.dark ? '#95a5a6' : '#bdc3c7') : 'none')};
+  background: ${props => (props.active ? (props.dark ? '#95a5a6' : '#bdc3c7') : 'transparent')};
   border: 1px solid ${props => (props.dark ? '#95a5a6' : '#bdc3c7')};
   border-radius: 5px;
-  padding: 5px 10px;
+  padding: 8px 12px;
   margin: 5px;
   color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
   cursor: pointer;
+  transition: background-color 0.3s;
+  min-width: 80px;
 `;
 
 const ModalOverlay = styled(motion.div)`
@@ -125,13 +150,42 @@ const ModalOverlay = styled(motion.div)`
 `;
 
 const ModalContent = styled.div`
-  background-color: ${props => props.dark ? '#34495e' : 'white'};
+  background-color: ${props => (props.dark ? '#34495e' : 'white')};
   padding: 20px;
   border-radius: 10px;
-  color: ${props => props.dark ? '#ecf0f1' : '#2c3e50'};
+  color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  @media (max-width: 768px) {
+    width: 90%;
+  }
 `;
 
-// Components
+const FormLabel = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 1rem;
+`;
+
+const FormInput = styled.input`
+  padding: 8px;
+  border: 1px solid ${props => (props.dark ? '#95a5a6' : '#bdc3c7')};
+  border-radius: 5px;
+  background: ${props => (props.dark ? '#2c3e50' : '#fff')};
+  color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
+  width: 100%;
+  box-sizing: border-box;
+  &:focus {
+    border-color: ${props => (props.dark ? '#3498db' : '#2980b9')};
+    outline: none;
+  }
+`;
+
+// Clock Component
 const Clock = ({ dark, birthday, lifespanOption }) => {
   const [timePassedDisplay, setTimePassedDisplay] = useState('');
 
@@ -176,6 +230,7 @@ const Clock = ({ dark, birthday, lifespanOption }) => {
   );
 };
 
+// LifeWeeksDisplay Component
 const LifeWeeksDisplay = ({ dark, birthday, setBirthday, lifespanOption, setLifespanOption }) => {
   const [unit, setUnit] = useState('weeks');
 
@@ -210,7 +265,11 @@ const LifeWeeksDisplay = ({ dark, birthday, setBirthday, lifespanOption, setLife
         fill={i < passedUnits ? (dark ? '#333' : '#ccc') : (dark ? '#aaa' : '#222')}
       />
     ));
-    content = <svg width={cols * 10} height={rows * 10}>{dots}</svg>;
+    content = (
+      <svg width="100%" height={rows * 10} viewBox={`0 0 ${cols * 10} ${rows * 10}`} preserveAspectRatio="xMidYMid meet">
+        {dots}
+      </svg>
+    );
   }
 
   return (
@@ -260,7 +319,7 @@ const LifeWeeksDisplay = ({ dark, birthday, setBirthday, lifespanOption, setLife
   );
 };
 
-// Main App Component
+// MainApp Component
 const MainApp = () => {
   const [calendarView, setCalendarView] = useState('day');
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -269,11 +328,27 @@ const MainApp = () => {
   const [lockedIn, setLockedIn] = useState(false);
   const [parseErrors, setParseErrors] = useState([]);
   const [lastInput, setLastInput] = useState('');
+  const [lastRepeatDate, setLastRepeatDate] = useState(null);
   const [calendarHeight, setCalendarHeight] = useState(800);
   const [birthday, setBirthday] = useState('');
   const [lifespanOption, setLifespanOption] = useState(null);
-  const [selectedEvent, setSelectedEvent] = useState(null); // New state for selected event
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [editingEvent, setEditingEvent] = useState(null);
   const calendarWrapperRef = useRef(null);
+
+  // Dynamic calendar height for mobile responsiveness
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setCalendarHeight(window.innerHeight * 0.6);
+      } else {
+        setCalendarHeight(800);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const parseEvents = (input, referenceDate) => {
     if (!input.trim()) return;
@@ -281,25 +356,35 @@ const MainApp = () => {
     const newEvents = [];
     const errors = [];
     eventStrings.forEach(str => {
-      const match = str.match(/^\[?(.*?)\]?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(am|pm)$/i);
+      const match = str.match(/^\[?(.*?)\]?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(am|pm)?$/i);
       if (match) {
         const [, title, startTime, endTime, period] = match;
-        const start = parse(`${startTime} ${period}`, 'h:mm a', referenceDate);
-        const end = parse(`${endTime} ${period}`, 'h:mm a', referenceDate);
-        if (end < start) end.setDate(end.getDate() + 1);
-        newEvents.push({ title: title.trim(), start, end, color: '#3788d8' }); // Added color property
+        let start, end;
+        if (period) {
+          start = parse(`${startTime} ${period}`, 'h:mm a', referenceDate);
+          end = parse(`${endTime} ${period}`, 'h:mm a', referenceDate);
+        } else {
+          start = parse(startTime, 'H:mm', referenceDate);
+          end = parse(endTime, 'H:mm', referenceDate);
+        }
+        if (isValid(start) && isValid(end)) {
+          if (end < start) end.setDate(end.getDate() + 1);
+          newEvents.push({ title: title.trim() || 'Untitled', start, end, color: '#3788d8' });
+        } else {
+          errors.push(`Invalid time format: ${str}`);
+        }
       } else {
-        errors.push(`Invalid event: ${str}`);
+        errors.push(`Invalid event format: ${str}`);
       }
     });
     setEvents(prev => [...prev, ...newEvents]);
     setParseErrors(errors);
+    if (newEvents.length > 0) setLastRepeatDate(referenceDate);
   };
 
   const repeatEvents = () => {
     if (lastInput) {
-      const nextDay = new Date();
-      nextDay.setDate(nextDay.getDate() + 1);
+      const nextDay = lastRepeatDate ? addDays(lastRepeatDate, 1) : addDays(new Date(), 1);
       parseEvents(lastInput, nextDay);
     }
   };
@@ -317,15 +402,19 @@ const MainApp = () => {
     }
   }, [lockedIn, calendarHeight]);
 
-  // Custom event component for colored events
   const CustomEvent = ({ event }) => (
     <div style={{ backgroundColor: event.color, color: 'white', padding: '5px', borderRadius: '5px' }}>
       {event.title}
     </div>
   );
 
+  const handleSelectEvent = (event) => {
+    setSelectedEvent(event);
+    setEditingEvent({ ...event, start: new Date(event.start), end: new Date(event.end) });
+  };
+
   return (
-    <AppContainer dark={darkMode}>
+    <AppContainer dark={darkMode} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <Header dark={darkMode} initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }}>
         <FaCalendarAlt /> Fast Calendar
         <IconButton dark={darkMode} onClick={() => setDarkMode(!darkMode)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -338,7 +427,7 @@ const MainApp = () => {
       <InputWrapper>
         <Input
           dark={darkMode}
-          placeholder="e.g., Meeting 9:00-10:00 am; Lunch 12:00-1:00 pm"
+          placeholder="e.g., [Meeting] 9:00-10:00"
           onKeyDown={e => {
             if (e.key === 'Enter') {
               const inputValue = e.target.value;
@@ -363,10 +452,10 @@ const MainApp = () => {
         <CalendarWrapper ref={calendarWrapperRef} dark={darkMode} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
             <div>
-              <TextButton dark={darkMode} onClick={() => setCalendarHeight(prev => prev + 100)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <TextButton dark={darkMode} onClick={() => setCalendarHeight(prev => prev + 1000)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 Increase Size
               </TextButton>
-              <TextButton dark={darkMode} onClick={() => setCalendarHeight(prev => Math.max(prev - 100, 300))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <TextButton dark={darkMode} onClick={() => setCalendarHeight(prev => Math.max(prev - 1000, 300))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 Decrease Size
               </TextButton>
             </div>
@@ -375,53 +464,102 @@ const MainApp = () => {
             localizer={localizer}
             events={events}
             view={calendarView}
-            onView={(newView) => setCalendarView(newView)}
+            onView={setCalendarView}
             date={calendarDate}
-            onNavigate={(newDate) => setCalendarDate(newDate)}
-            step={15} // Fixed value, density removed
-            timeslots={4} // Fixed value, density removed
+            onNavigate={setCalendarDate}
+            step={15}
+            timeslots={4}
             views={['day', 'week', 'month']}
             style={{ height: `${calendarHeight}px` }}
-            onSelectEvent={(event) => setSelectedEvent(event)} // Added event selection
-            components={{ event: CustomEvent }} // Custom event rendering
+            onSelectEvent={handleSelectEvent}
+            components={{ event: CustomEvent }}
           />
-          {selectedEvent && (
-            <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <ModalContent dark={darkMode}>
-                <h2>{selectedEvent.title}</h2>
-                <p>Start: {format(selectedEvent.start, 'PPpp')}</p>
-                <p>End: {format(selectedEvent.end, 'PPpp')}</p>
-                <button
-                  onClick={() => {
-                    const text = `Title: ${selectedEvent.title}\nStart: ${format(selectedEvent.start, 'PPpp')}\nEnd: ${format(selectedEvent.end, 'PPpp')}`;
+          {selectedEvent && editingEvent && (
+            <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setSelectedEvent(null)}>
+              <ModalContent dark={darkMode} onClick={e => e.stopPropagation()}>
+                <FormLabel dark={darkMode}>
+                  Title:
+                  <FormInput
+                    type="text"
+                    value={editingEvent.title}
+                    onChange={e => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                  />
+                </FormLabel>
+                <FormLabel dark={darkMode}>
+                  Start:
+                  <FormInput
+                    type="time"
+                    value={format(editingEvent.start, 'HH:mm')}
+                    onChange={e => {
+                      const [hours, minutes] = e.target.value.split(':');
+                      const newStart = new Date(editingEvent.start);
+                      newStart.setHours(parseInt(hours), parseInt(minutes));
+                      setEditingEvent({ ...editingEvent, start: newStart });
+                    }}
+                  />
+                </FormLabel>
+                <FormLabel dark={darkMode}>
+                  End:
+                  <FormInput
+                    type="time"
+                    value={format(editingEvent.end, 'HH:mm')}
+                    onChange={e => {
+                      const [hours, minutes] = e.target.value.split(':');
+                      const newEnd = new Date(editingEvent.end);
+                      newEnd.setHours(parseInt(hours), parseInt(minutes));
+                      setEditingEvent({ ...editingEvent, end: newEnd });
+                    }}
+                  />
+                </FormLabel>
+                <FormLabel dark={darkMode}>
+                  Color:
+                  <FormInput
+                    type="color"
+                    value={editingEvent.color}
+                    onChange={e => setEditingEvent({ ...editingEvent, color: e.target.value })}
+                  />
+                </FormLabel>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
+                  <TextButton dark={darkMode} onClick={() => {
+                    const text = `Title: ${editingEvent.title}\nStart: ${format(editingEvent.start, 'PPpp')}\nEnd: ${format(editingEvent.end, 'PPpp')}`;
                     navigator.clipboard.writeText(text).then(() => alert('Event details copied to clipboard'));
-                  }}
-                >
-                  Share
-                </button>
-                <input
-                  type="color"
-                  value={selectedEvent.color}
-                  onChange={(e) => {
-                    const newColor = e.target.value;
-                    setEvents(prevEvents => prevEvents.map(ev => ev === selectedEvent ? { ...ev, color: newColor } : ev));
-                  }}
-                  style={{ marginLeft: '10px' }}
-                />
-                <button onClick={() => setSelectedEvent(null)} style={{ marginLeft: '10px' }}>Close</button>
+                  }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    Share
+                  </TextButton>
+                  <TextButton dark={darkMode} onClick={() => {
+                    setEvents(prev => prev.map(ev => ev === selectedEvent ? editingEvent : ev));
+                    setSelectedEvent(null);
+                  }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    Save
+                  </TextButton>
+                  <TextButton dark={darkMode} onClick={() => {
+                    setEvents(prev => prev.filter(ev => ev !== selectedEvent));
+                    setSelectedEvent(null);
+                  }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    Delete
+                  </TextButton>
+                  <TextButton dark={darkMode} onClick={() => setSelectedEvent(null)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    Close
+                  </TextButton>
+                </div>
               </ModalContent>
             </ModalOverlay>
           )}
         </CalendarWrapper>
         <RightSection>
           <Clock dark={darkMode} birthday={birthday} lifespanOption={lifespanOption} />
-          <LifeWeeksDisplay dark={darkMode} birthday={birthday} setBirthday={setBirthday} lifespanOption={lifespanOption} setLifespanOption={setLifespanOption} />
+          <LifeWeeksDisplay
+            dark={darkMode}
+            birthday={birthday}
+            setBirthday={setBirthday}
+            lifespanOption={lifespanOption}
+            setLifespanOption={setLifespanOption}
+          />
         </RightSection>
       </MainContent>
     </AppContainer>
   );
 };
-
 
 // App Component with Routing
 const App = () => {
@@ -435,3 +573,6 @@ const App = () => {
 };
 
 export default App;
+
+// Hey pookie reading this, I need to make it so that the app handles auto dynamic resizing, mobile compatiable, and a few other things. I'll get to it soon. I promise. I love you. <3
+// Oh also I need to add back end logic so that events are handled and stored in a database. I'll get to that too. I love you. <3
