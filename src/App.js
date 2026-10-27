@@ -1,17 +1,9 @@
-// UwU Hi this is my codeee <3
-
-// It is a smart calendar that enables instant deployment of events with a AI and Programatic approach.
-// It is super fast, but it needs lots of work. this is just a start.
-// 
-
-import React, { useState, useRef, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, differenceInWeeks, differenceInDays, addYears, isValid, addDays } from 'date-fns';
-import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { FaCalendarAlt, FaSun, FaMoon, FaLock, FaUnlock, FaRedo } from 'react-icons/fa';
+import { format, parse, startOfWeek, getDay, differenceInWeeks, addYears, isValid } from 'date-fns';
+import styled, { createGlobalStyle } from 'styled-components';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { enUS } from 'date-fns/locale';
 
 // Date-fns localizer setup
 const localizer = dateFnsLocalizer({
@@ -19,56 +11,60 @@ const localizer = dateFnsLocalizer({
   parse,
   startOfWeek,
   getDay,
-  locales: { 'en-US': require('date-fns/locale/en-US') },
+  locales: { 'en-US': enUS },
 });
 
-// Styled Components
-const AppContainer = styled(motion.div)`
-  padding: 20px;
-  background: ${props => props.dark
-    ? 'linear-gradient(to bottom, #151d25, #34495e)'
-    : 'linear-gradient(to bottom, #ecf0f1, #b5b5b5)'};
-  color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const Header = styled(motion.header)`
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-  font-weight: bold;
-  width: 100%;
-  max-width: 1200px;
-  @media (max-width: 768px) {
-    font-size: 1.2rem;
+// Global Styles
+const GlobalStyle = createGlobalStyle`
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background: #121212;
+    color: #64B5F6;
   }
 `;
 
-const InputWrapper = styled.div`
-  position: relative;
-  margin-bottom: 20px;
-  width: 100%;
-  max-width: 600px;
+// Styled Components
+const AppContainer = styled.div`
+  padding: 20px;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  min-height: 100vh;
 `;
 
-const Input = styled(motion.input)`
+const Header = styled.header`
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  font-weight: bold;
+  width: 100%;
+  max-width: 1200px;
+  color: #64B5F6;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #1E1E1E;
+`;
+
+const Input = styled.input`
   flex: 1;
-  padding: 10px 40px 10px 10px;
-  border: 1px solid ${props => (props.dark ? '#95a5a6' : '#bdc3c7')};
-  border-radius: 5px;
-  background: ${props => props.dark ? '#304254' : '#fff'};
-  color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
-  transition: border-color 0.3s;
+  padding: 12px 15px;
+  border: 1px solid #64B5F6;
+  border-radius: 8px;
+  background: #1E1E1E;
+  color: #64B5F6;
+  margin-bottom: 25px;
+  width: 100%;
+  max-width: 600px;
+  font-size: 1rem;
+  &::placeholder {
+    color: #90CAF9;
+  }
   &:focus {
-    border-color: ${props => (props.dark ? '#3498db' : '#2980b9')};
     outline: none;
+    border-color: #BBDEFB;
+    box-shadow: 0 0 5px rgba(100, 181, 246, 0.5);
   }
 `;
 
@@ -76,124 +72,136 @@ const MainContent = styled.div`
   display: flex;
   width: 100%;
   max-width: 1200px;
-  gap: 20px;
-  @media (max-width: 768px) {
+  gap: 30px;
+  @media (max-width: 960px) {
     flex-direction: column;
   }
 `;
 
-const CalendarWrapper = styled(motion.div)`
+const CalendarWrapper = styled.div`
   flex: 1;
-  padding: 20px;
-  background: ${props => props.dark
-    ? 'linear-gradient(to bottom, #34495e, #385269)'
-    : 'linear-gradient(to bottom, #fff, #f9f9f9)'};
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 25px;
+  background: #1E1E1E;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
 `;
 
 const RightSection = styled.div`
-  width: 300px;
+  width: 350px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  @media (max-width: 768px) {
+  gap: 25px;
+  @media (max-width: 960px) {
     width: 100%;
   }
 `;
 
 const LifeWeeksContainer = styled.div`
-  padding: 20px;
-  background: ${props => props.dark
-    ? 'linear-gradient(to bottom, #34495e, #385269)'
-    : 'linear-gradient(to bottom, #fff, #f9f9f9)'};
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 25px;
+  background: #1E1E1E;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
 `;
 
-const IconButton = styled(motion.button)`
-  background: none;
-  border: none;
-  color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+`;
+
+const BaseButton = styled.button`
+  border: 1px solid #64B5F6;
+  border-radius: 8px;
+  padding: 10px 15px;
+  color: #64B5F6;
   cursor: pointer;
-  font-size: 1.2rem;
-  margin-left: 10px;
-  transition: color 0.3s;
-  padding: 10px;
+  transition: background-color 0.3s ease;
+  font-size: 0.9rem;
   &:hover {
-    color: ${props => (props.dark ? '#3498db' : '#2980b9')};
+    background-color: rgba(100, 181, 246, 0.1);
+  }
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(100, 181, 246, 0.5);
   }
 `;
 
-const TextButton = styled(motion.button)`
-  background: ${props => (props.active ? (props.dark ? '#95a5a6' : '#bdc3c7') : 'transparent')};
-  border: 1px solid ${props => (props.dark ? '#95a5a6' : '#bdc3c7')};
-  border-radius: 5px;
-  padding: 8px 12px;
-  margin: 5px;
-  color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
-  cursor: pointer;
-  transition: background-color 0.3s;
-  min-width: 80px;
+const TextButton = styled(BaseButton)`
+  background: ${props => (props.active ? '#64B5F6' : 'transparent')};
+  color: ${props => (props.active ? '#1E1E1E' : '#64B5F6')};
+  &:hover {
+    background-color: ${props => (props.active ? '#64B5F6' : 'rgba(100, 181, 246, 0.1)')};
+  }
 `;
 
-const ModalOverlay = styled(motion.div)`
+const SizeButton = styled(BaseButton)``;
+
+const FocusButton = styled(BaseButton)`
+  margin-left: 10px;
+`;
+
+const ClockContainer = styled.div`
+  text-align: center;
+  font-size: 1.1rem;
+  color: #90CAF9;
+  padding: 20px;
+  background: #1E1E1E;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+`;
+
+const FocusModalOverlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  z-index: 1000;
 `;
 
-const ModalContent = styled.div`
-  background-color: ${props => (props.dark ? '#34495e' : 'white')};
+const FocusModalContent = styled.div`
+  background: #1E1E1E;
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 800px;
+  width: 90%;
+  color: #BBDEFB;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.8);
+`;
+
+const FocusEventCardsContainer = styled.div`
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const FocusEventCard = styled.div`
+  background: linear-gradient(135deg, #1E1E1E, #424242);
+  border-radius: 12px;
   padding: 20px;
-  border-radius: 10px;
-  color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
-  width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  @media (max-width: 768px) {
-    width: 90%;
+  flex: 1 1 300px;
+  color: #BBDEFB;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  transition: transform 0.3s ease;
+  &:hover {
+    transform: scale(1.02);
   }
-`;
-
-const FormLabel = styled.label`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 1rem;
-`;
-
-const FormInput = styled.input`
-  padding: 8px;
-  border: 1px solid ${props => (props.dark ? '#95a5a6' : '#bdc3c7')};
-  border-radius: 5px;
-  background: ${props => (props.dark ? '#2c3e50' : '#fff')};
-  color: ${props => (props.dark ? '#ecf0f1' : '#2c3e50')};
-  width: 100%;
-  box-sizing: border-box;
-  &:focus {
-    border-color: ${props => (props.dark ? '#3498db' : '#2980b9')};
-    outline: none;
+  h3 {
+    margin-top: 0;
   }
 `;
 
 // Clock Component
-const Clock = ({ dark, birthday, lifespanOption }) => {
-  const [timePassedDisplay, setTimePassedDisplay] = useState('');
+const Clock = ({ birthday, lifespanOption }) => {
+  const [timePassedDisplay, setTimePassedDisplay] = useState('Enter birthday and lifespan');
 
   useEffect(() => {
-    if (!birthday || !lifespanOption) {
-      setTimePassedDisplay('Enter birthday and lifespan');
-      return;
-    }
+    if (!birthday || !lifespanOption) return;
 
     const timer = setInterval(() => {
       const birthdayDate = new Date(birthday);
@@ -201,8 +209,8 @@ const Clock = ({ dark, birthday, lifespanOption }) => {
       const lifespanYearsOptions = { unhealthy: 65, healthy: 80, bryan: 130 };
       const expectedLifespanYears = lifespanYearsOptions[lifespanOption];
 
-      if (!isValid(birthdayDate) || birthdayDate >= now || !expectedLifespanYears) {
-        setTimePassedDisplay('Invalid date or option');
+      if (!isValid(birthdayDate) || birthdayDate >= now) {
+        setTimePassedDisplay('Invalid date');
         return;
       }
 
@@ -215,341 +223,201 @@ const Clock = ({ dark, birthday, lifespanOption }) => {
       }
 
       const yearsPassed = differenceInWeeks(now, birthdayDate) / 52;
-      const expectedYears = expectedLifespanYears;
-
-      setTimePassedDisplay(`Years Passed: ${yearsPassed.toFixed(2)} / Expected: ${expectedYears}`);
+      setTimePassedDisplay(`Years Passed: ${yearsPassed.toFixed(2)} / ${expectedLifespanYears}`);
     }, 1000);
 
     return () => clearInterval(timer);
   }, [birthday, lifespanOption]);
 
-  return (
-    <div style={{ textAlign: 'center', fontSize: '1.2rem', color: dark ? '#ecf0f1' : '#2c3e50' }}>
-      Lifespan Clock: {timePassedDisplay}
-    </div>
-  );
+  return <ClockContainer>{timePassedDisplay}</ClockContainer>;
 };
 
 // LifeWeeksDisplay Component
-const LifeWeeksDisplay = ({ dark, birthday, setBirthday, lifespanOption, setLifespanOption }) => {
-  const [unit, setUnit] = useState('weeks');
-
+const LifeWeeksDisplay = ({ birthday, setBirthday, lifespanOption, setLifespanOption }) => {
   const lifespanYears = { unhealthy: 65, healthy: 80, bryan: 130 };
   const birthdayDate = new Date(birthday);
   const now = new Date();
   const isValidDate = isValid(birthdayDate) && birthdayDate < now;
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      alert('Text copied to clipboard');
-    }).catch(err => {
-      console.error('Failed to copy text: ', err);
-    });
-  };
-
   let content;
   if (!birthday || !lifespanOption || !isValidDate) {
-    content = <p>Please enter a valid birthday and select a lifespan option.</p>;
+    content = <p style={{ color: '#90CAF9' }}>Set your birthday and lifespan to see your life weeks.</p>;
   } else {
     const expectedDeath = addYears(birthdayDate, lifespanYears[lifespanOption]);
-    const [totalUnits, passedUnits] = unit === 'weeks'
-      ? [differenceInWeeks(expectedDeath, birthdayDate), differenceInWeeks(now, birthdayDate)]
-      : [differenceInDays(expectedDeath, birthdayDate), differenceInDays(now, birthdayDate)];
-    const [rows, cols] = unit === 'weeks' ? [lifespanYears[lifespanOption], 52] : [Math.ceil(totalUnits / 7), 7];
-    const dots = Array.from({ length: totalUnits }, (_, i) => (
+    const totalWeeks = differenceInWeeks(expectedDeath, birthdayDate);
+    const passedWeeks = differenceInWeeks(now, birthdayDate);
+
+    const dots = Array.from({ length: totalWeeks }, (_, i) => (
       <circle
         key={i}
-        cx={(i % cols) * 10 + 5}
-        cy={Math.floor(i / cols) * 10 + 5}
-        r={3}
-        fill={i < passedUnits ? (dark ? '#333' : '#ccc') : (dark ? '#aaa' : '#222')}
+        cx={(i % 52) * 8 + 4}
+        cy={Math.floor(i / 52) * 8 + 4}
+        r={2}
+        fill={i < passedWeeks ? '#424242' : 'red'}
       />
     ));
+
     content = (
-      <svg width="100%" height={rows * 10} viewBox={`0 0 ${cols * 10} ${rows * 10}`} preserveAspectRatio="xMidYMid meet">
+      <svg width="100%" height={lifespanYears[lifespanOption] * 8} viewBox={`0 0 ${52 * 8} ${lifespanYears[lifespanOption] * 8}`}>
         {dots}
       </svg>
     );
   }
 
   return (
-    <LifeWeeksContainer dark={dark}>
+    <LifeWeeksContainer>
       <h2>Life Weeks</h2>
       <input
         type="date"
         value={birthday}
         onChange={e => setBirthday(e.target.value)}
-        style={{ padding: '8px', margin: '10px 0', border: '1px solid #bdc3c7', borderRadius: '5px', background: dark ? '#2c3e50' : '#fff', color: dark ? '#ecf0f1' : '#2c3e50' }}
+        style={{
+          padding: '10px',
+          margin: '10px 0 15px',
+          border: '1px solid #64B5F6',
+          borderRadius: '8px',
+          background: '#1E1E1E',
+          color: '#90CAF9',
+          fontSize: '1rem',
+        }}
       />
-      <div>
+      <ButtonGroup>
         {['unhealthy', 'healthy', 'bryan'].map(opt => (
           <TextButton
             key={opt}
-            dark={dark}
-            onClick={() => {
-              setLifespanOption(opt);
-              if (opt === 'bryan') {
-                copyToClipboard(`PLACEHOLDER`);
-              }
-            }}
+            onClick={() => setLifespanOption(opt)}
             active={lifespanOption === opt}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
-            {opt === 'bryan' ? 'Bryan Johnson (130 years)' : `${opt.charAt(0).toUpperCase() + opt.slice(1)} (${lifespanYears[opt]} years)`}
+            {opt === 'bryan' ? 'Bryan (130)' : `${opt.charAt(0).toUpperCase() + opt.slice(1)} (${lifespanYears[opt]})`}
           </TextButton>
         ))}
-      </div>
-      <div>
-        {['weeks', 'days'].map(u => (
-          <TextButton
-            key={u}
-            dark={dark}
-            onClick={() => setUnit(u)}
-            active={unit === u}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {u.charAt(0).toUpperCase() + u.slice(1)}
-          </TextButton>
-        ))}
-      </div>
+      </ButtonGroup>
       <div>{content}</div>
+      <p style={{ fontSize: '0.8rem', color: '#78909C', marginTop: '10px' }}>
+        Darker circles represent weeks passed. Lighter circles represent future weeks.
+      </p>
     </LifeWeeksContainer>
   );
 };
 
-// MainApp Component
-const MainApp = () => {
-  const [calendarView, setCalendarView] = useState('day');
-  const [calendarDate, setCalendarDate] = useState(new Date());
+// Main App Component
+const App = () => {
   const [events, setEvents] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
-  const [lockedIn, setLockedIn] = useState(false);
-  const [parseErrors, setParseErrors] = useState([]);
-  const [lastInput, setLastInput] = useState('');
-  const [lastRepeatDate, setLastRepeatDate] = useState(null);
-  const [calendarHeight, setCalendarHeight] = useState(800);
   const [birthday, setBirthday] = useState('');
-  const [lifespanOption, setLifespanOption] = useState(null);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [editingEvent, setEditingEvent] = useState(null);
-  const calendarWrapperRef = useRef(null);
+  const [lifespanOption, setLifespanOption] = useState('healthy');
+  const [calendarHeight, setCalendarHeight] = useState(600);
+  const [isFocusMode, setIsFocusMode] = useState(false);
 
-  // Dynamic calendar height for mobile responsiveness
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setCalendarHeight(window.innerHeight * 0.6);
+  const parseEvents = (input) => {
+    if (!input.trim()) return;
+
+    const eventStrings = input.split(';').map(str => str.trim());
+    let newEvents = [];
+    let idCounter = Date.now();
+    const chunkSize = 500;
+
+    const processChunk = (startIndex) => {
+      const endIndex = Math.min(startIndex + chunkSize, eventStrings.length);
+
+      for (let i = startIndex; i < endIndex; i++) {
+        const str = eventStrings[i];
+        const match = str.match(/^(?:\[([^\]]+)\]\s*)?(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})$/i);
+
+        if (match) {
+          const [, title, startTime, endTime] = match;
+          const today = new Date();
+          const start = parse(startTime, 'HH:mm', today);
+          const end = parse(endTime, 'HH:mm', today);
+
+          if (isValid(start) && isValid(end)) {
+            newEvents.push({
+              id: `event-${idCounter++}`,
+              title: title ? title.trim() : 'Untitled',
+              start,
+              end,
+              color: '#64B5F6',
+            });
+          }
+        } else if (str.trim()) {
+          console.warn(`Invalid event format: "${str}"`);
+        }
+      }
+
+      if (endIndex < eventStrings.length) {
+        requestAnimationFrame(() => processChunk(endIndex));
       } else {
-        setCalendarHeight(800);
+        setEvents(prev => [...prev, ...newEvents]);
       }
     };
-    window.addEventListener('resize', handleResize);
-    handleResize();
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
-  const parseEvents = (input, referenceDate) => {
-    if (!input.trim()) return;
-    const eventStrings = input.split(';').map(str => str.trim());
-    const newEvents = [];
-    const errors = [];
-    eventStrings.forEach(str => {
-      const match = str.match(/^\[?(.*?)\]?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(am|pm)?$/i);
-      if (match) {
-        const [, title, startTime, endTime, period] = match;
-        let start, end;
-        if (period) {
-          start = parse(`${startTime} ${period}`, 'h:mm a', referenceDate);
-          end = parse(`${endTime} ${period}`, 'h:mm a', referenceDate);
-        } else {
-          start = parse(startTime, 'H:mm', referenceDate);
-          end = parse(endTime, 'H:mm', referenceDate);
-        }
-        if (isValid(start) && isValid(end)) {
-          if (end < start) end.setDate(end.getDate() + 1);
-          newEvents.push({ title: title.trim() || 'Untitled', start, end, color: '#3788d8' });
-        } else {
-          errors.push(`Invalid time format: ${str}`);
-        }
-      } else {
-        errors.push(`Invalid event format: ${str}`);
-      }
-    });
-    setEvents(prev => [...prev, ...newEvents]);
-    setParseErrors(errors);
-    if (newEvents.length > 0) setLastRepeatDate(referenceDate);
+    requestAnimationFrame(() => processChunk(0));
   };
 
-  const repeatEvents = () => {
-    if (lastInput) {
-      const nextDay = lastRepeatDate ? addDays(lastRepeatDate, 1) : addDays(new Date(), 1);
-      parseEvents(lastInput, nextDay);
+  const toggleFocusMode = () => {
+    setIsFocusMode(prev => !prev);
+  };
+
+  const exitFocusMode = () => {
+    setIsFocusMode(false);
+  };
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      exitFocusMode();
     }
   };
 
-  useEffect(() => {
-    if (lockedIn && calendarWrapperRef.current) {
-      const scrollContainer = calendarWrapperRef.current.querySelector('.rbc-time-content');
-      if (scrollContainer) {
-        const now = new Date();
-        const startOfDay = new Date(now.setHours(0, 0, 0, 0));
-        const fraction = (now - startOfDay) / (24 * 60 * 60 * 1000);
-        const scrollPosition = fraction * calendarHeight - scrollContainer.clientHeight / 2;
-        scrollContainer.scrollTop = scrollPosition;
-      }
-    }
-  }, [lockedIn, calendarHeight]);
-
-  const CustomEvent = ({ event }) => (
-    <div style={{ backgroundColor: event.color, color: 'white', padding: '5px', borderRadius: '5px' }}>
-      {event.title}
-    </div>
+  const activeFocusEvents = events.filter(
+    event => event.title !== "Welcome Event" && event.start <= new Date() && new Date() < event.end
   );
 
-  const handleSelectEvent = (event) => {
-    setSelectedEvent(event);
-    setEditingEvent({ ...event, start: new Date(event.start), end: new Date(event.end) });
-  };
-
   return (
-    <AppContainer dark={darkMode} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <Header dark={darkMode} initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }}>
-        <FaCalendarAlt /> Fast Calendar
-        <IconButton dark={darkMode} onClick={() => setDarkMode(!darkMode)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-          {darkMode ? <FaSun /> : <FaMoon />}
-        </IconButton>
-        <IconButton dark={darkMode} onClick={() => setLockedIn(!lockedIn)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-          {lockedIn ? <FaUnlock /> : <FaLock />}
-        </IconButton>
+    <AppContainer>
+      <GlobalStyle />
+      <Header>
+        Fast Calendar (24hr Format)
+        <FocusButton onClick={toggleFocusMode}>
+          {isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+        </FocusButton>
       </Header>
-      <InputWrapper>
-        <Input
-          dark={darkMode}
-          placeholder="e.g., [Meeting] 9:00-10:00"
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              const inputValue = e.target.value;
-              parseEvents(inputValue, new Date());
-              setLastInput(inputValue);
-              e.target.value = '';
-            }
-          }}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-        />
-        <IconButton dark={darkMode} onClick={repeatEvents} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-          <FaRedo />
-        </IconButton>
-        {parseErrors.length > 0 && (
-          <div style={{ color: 'red', marginTop: '10px' }}>
-            {parseErrors.map((err, i) => <p key={i}>{err}</p>)}
-          </div>
-        )}
-      </InputWrapper>
+      <Input
+        placeholder="e.g., [Meeting] 14:00-15:30; [Call] 16:00-17:00"
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            parseEvents(e.target.value);
+            e.target.value = '';
+          }
+        }}
+      />
       <MainContent>
-        <CalendarWrapper ref={calendarWrapperRef} dark={darkMode} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-            <div>
-              <TextButton dark={darkMode} onClick={() => setCalendarHeight(prev => prev + 1000)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                Increase Size
-              </TextButton>
-              <TextButton dark={darkMode} onClick={() => setCalendarHeight(prev => Math.max(prev - 1000, 300))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                Decrease Size
-              </TextButton>
-            </div>
+        <CalendarWrapper>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '15px', gap: '10px' }}>
+            <SizeButton onClick={() => setCalendarHeight(prev => prev + 10000)}>
+              Increase Size
+            </SizeButton>
+            <SizeButton onClick={() => setCalendarHeight(prev => Math.max(prev - 1000, 400))}>
+              Decrease Size
+            </SizeButton>
           </div>
           <Calendar
             localizer={localizer}
             events={events}
-            view={calendarView}
-            onView={setCalendarView}
-            date={calendarDate}
-            onNavigate={setCalendarDate}
-            step={15}
-            timeslots={4}
-            views={['day', 'week', 'month']}
-            style={{ height: `${calendarHeight}px` }}
-            onSelectEvent={handleSelectEvent}
-            components={{ event: CustomEvent }}
+            view="day"
+            step={1}
+            timeslots={60}
+            defaultView="day"
+            min={new Date(new Date().setHours(0, 0, 0, 0))}
+            max={new Date(new Date().setHours(23, 59, 59, 999))}
+            style={{ height: `${calendarHeight}px`, background: '#1E1E1E', color: '#64B5F6', borderRadius: '8px' }}
+            formats={{
+              timeGutterFormat: 'HH:mm',
+              eventTimeRangeFormat: ({ start, end }) => `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`,
+            }}
           />
-          {selectedEvent && editingEvent && (
-            <ModalOverlay initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setSelectedEvent(null)}>
-              <ModalContent dark={darkMode} onClick={e => e.stopPropagation()}>
-                <FormLabel dark={darkMode}>
-                  Title:
-                  <FormInput
-                    type="text"
-                    value={editingEvent.title}
-                    onChange={e => setEditingEvent({ ...editingEvent, title: e.target.value })}
-                  />
-                </FormLabel>
-                <FormLabel dark={darkMode}>
-                  Start:
-                  <FormInput
-                    type="time"
-                    value={format(editingEvent.start, 'HH:mm')}
-                    onChange={e => {
-                      const [hours, minutes] = e.target.value.split(':');
-                      const newStart = new Date(editingEvent.start);
-                      newStart.setHours(parseInt(hours), parseInt(minutes));
-                      setEditingEvent({ ...editingEvent, start: newStart });
-                    }}
-                  />
-                </FormLabel>
-                <FormLabel dark={darkMode}>
-                  End:
-                  <FormInput
-                    type="time"
-                    value={format(editingEvent.end, 'HH:mm')}
-                    onChange={e => {
-                      const [hours, minutes] = e.target.value.split(':');
-                      const newEnd = new Date(editingEvent.end);
-                      newEnd.setHours(parseInt(hours), parseInt(minutes));
-                      setEditingEvent({ ...editingEvent, end: newEnd });
-                    }}
-                  />
-                </FormLabel>
-                <FormLabel dark={darkMode}>
-                  Color:
-                  <FormInput
-                    type="color"
-                    value={editingEvent.color}
-                    onChange={e => setEditingEvent({ ...editingEvent, color: e.target.value })}
-                  />
-                </FormLabel>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-                  <TextButton dark={darkMode} onClick={() => {
-                    const text = `Title: ${editingEvent.title}\nStart: ${format(editingEvent.start, 'PPpp')}\nEnd: ${format(editingEvent.end, 'PPpp')}`;
-                    navigator.clipboard.writeText(text).then(() => alert('Event details copied to clipboard'));
-                  }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    Share
-                  </TextButton>
-                  <TextButton dark={darkMode} onClick={() => {
-                    setEvents(prev => prev.map(ev => ev === selectedEvent ? editingEvent : ev));
-                    setSelectedEvent(null);
-                  }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    Save
-                  </TextButton>
-                  <TextButton dark={darkMode} onClick={() => {
-                    setEvents(prev => prev.filter(ev => ev !== selectedEvent));
-                    setSelectedEvent(null);
-                  }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    Delete
-                  </TextButton>
-                  <TextButton dark={darkMode} onClick={() => setSelectedEvent(null)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    Close
-                  </TextButton>
-                </div>
-              </ModalContent>
-            </ModalOverlay>
-          )}
         </CalendarWrapper>
         <RightSection>
-          <Clock dark={darkMode} birthday={birthday} lifespanOption={lifespanOption} />
+          <Clock birthday={birthday} lifespanOption={lifespanOption} />
           <LifeWeeksDisplay
-            dark={darkMode}
             birthday={birthday}
             setBirthday={setBirthday}
             lifespanOption={lifespanOption}
@@ -557,22 +425,31 @@ const MainApp = () => {
           />
         </RightSection>
       </MainContent>
+      {isFocusMode && (
+        <FocusModalOverlay onClick={handleOverlayClick}>
+          <FocusModalContent onClick={e => e.stopPropagation()}>
+            <h2 style={{ textAlign: 'center' }}>Focus Mode</h2>
+            <FocusEventCardsContainer>
+              {activeFocusEvents.length > 0 ? (
+                activeFocusEvents.map(event => (
+                  <FocusEventCard key={event.id}>
+                    <h3>{event.title}</h3>
+                    <p>{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</p>
+                    <p>This is your focused task. Stay on track!</p>
+                  </FocusEventCard>
+                ))
+              ) : (
+                <p>No active events currently. Add some events to focus on!</p>
+              )}
+            </FocusEventCardsContainer>
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <BaseButton onClick={exitFocusMode}>Close Focus Mode</BaseButton>
+            </div>
+          </FocusModalContent>
+        </FocusModalOverlay>
+      )}
     </AppContainer>
   );
 };
 
-// App Component with Routing
-const App = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/main" element={<MainApp />} />
-      </Routes>
-    </Router>
-  );
-};
-
 export default App;
-
-// Hey pookie reading this, I need to make it so that the app handles auto dynamic resizing, mobile compatiable, and a few other things. I'll get to it soon. I promise. I love you. <3
-// Oh also I need to add back end logic so that events are handled and stored in a database. I'll get to that too. I love you. <3
